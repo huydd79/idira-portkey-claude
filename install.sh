@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------
 # Setup script for idira-get-jwt.sh:
 #   1. Check required tools (curl, jq, nc, openssl); offer to install
-#      missing ones via Homebrew (macOS), or dnf/yum/apt-get (Linux).
+#      missing ones via Homebrew (macOS only).
 #   2. Check Claude Code is installed; if not, run Anthropic's
 #      official native installer (https://claude.ai/install.sh).
 #   3. Symlink idira-get-jwt.sh into ~/.local/bin so it can be run
@@ -19,21 +19,6 @@ TARGET_SCRIPT="$SCRIPT_DIR/idira-get-jwt.sh"
 BIN_DIR="$HOME/.local/bin"
 LINK_NAME="idira-get-jwt.sh"
 
-# "nc" is provided by a differently-named package depending on the
-# installer; everything else keeps its command name as package name.
-pkg_name_for() {
-  local tool="$1" manager="$2"
-  if [ "$tool" = "nc" ]; then
-    case "$manager" in
-      brew) echo "netcat" ;;
-      dnf|yum) echo "nmap-ncat" ;;
-      apt-get) echo "netcat-openbsd" ;;
-    esac
-  else
-    echo "$tool"
-  fi
-}
-
 echo "== Step 1: checking required tools =="
 MISSING=()
 for tool in curl jq nc openssl; do
@@ -46,31 +31,14 @@ for tool in curl jq nc openssl; do
 done
 
 if [ "${#MISSING[@]}" -gt 0 ]; then
-  MANAGER=""
-  for m in brew dnf yum apt-get; do
-    command -v "$m" >/dev/null 2>&1 && MANAGER="$m" && break
-  done
-
-  if [ -z "$MANAGER" ]; then
-    echo "[ERR] Missing tools (${MISSING[*]}) and no supported package manager" >&2
-    echo "[ERR] (brew/dnf/yum/apt-get) found. Install them manually, then re-run." >&2
+  if command -v brew >/dev/null 2>&1; then
+    echo "Installing missing tools via Homebrew: ${MISSING[*]}"
+    brew install "${MISSING[@]}"
+  else
+    echo "[ERR] Missing tools (${MISSING[*]}) and Homebrew not found." >&2
+    echo "[ERR] Install them manually, then re-run this script." >&2
     exit 1
   fi
-
-  PKGS=()
-  for tool in "${MISSING[@]}"; do
-    PKGS+=("$(pkg_name_for "$tool" "$MANAGER")")
-  done
-
-  SUDO=""
-  [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1 && SUDO="sudo"
-
-  echo "Installing missing tools via $MANAGER: ${PKGS[*]}"
-  case "$MANAGER" in
-    brew)    brew install "${PKGS[@]}" ;;
-    dnf|yum) $SUDO "$MANAGER" install -y "${PKGS[@]}" ;;
-    apt-get) $SUDO apt-get update && $SUDO apt-get install -y "${PKGS[@]}" ;;
-  esac
 fi
 
 echo ""
