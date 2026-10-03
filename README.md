@@ -7,6 +7,11 @@ required) to authenticate directly against Portkey instead of a static API
 key, then wiring that JWT into Claude Code so it can call a real LLM
 (Bedrock, routed through Portkey).
 
+> **macOS only for now.** `idira-get-jwt.sh` and `install.sh` rely on
+> BSD-specific tool behavior (e.g. `nc`'s `-w` flag) and have only been
+> tested on macOS. Running them on Linux (tested on RHEL/CentOS with
+> `ncat`) currently fails - no Linux support yet.
+
 ## Want to try it?
 
 This repo's values are wired to one specific lab environment, so cloning
