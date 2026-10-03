@@ -64,7 +64,7 @@ and running it as-is will **not work** without an account on that lab.
 ## Install
 
 ```bash
-git clone git@github.com:huydd79/idira-portkey-claude.git
+git clone https://github.com/huydd79/idira-portkey-claude.git
 cd idira-portkey-claude
 ./install.sh
 ```
