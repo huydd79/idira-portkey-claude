@@ -1,0 +1,11 @@
+{
+  "apiKeyHelper": "idira-get-jwt.sh",
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://api.portkey.ai",
+    "ANTHROPIC_CUSTOM_HEADERS": "x-portkey-config: pc-cf-hdo-00f7c3",
+    "CLAUDE_CODE_API_KEY_HELPER_TTL_MS": "3600000"
+  },
+  "disabledMcpjsonServers": [
+    "playwright"
+  ]
+}
