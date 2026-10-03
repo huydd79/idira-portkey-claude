@@ -90,6 +90,16 @@ STATE=$(openssl rand -hex 16)
 PORT=$(printf '%s' "$REDIRECT_URI" | sed -E 's#^https?://[^:/]+:?([0-9]*).*#\1#')
 PORT="${PORT:-80}"
 
+# Fail fast if something else already occupies the callback port (e.g. a
+# leftover nc from a previous aborted run, or an unrelated local dev
+# server) instead of racing it and getting a confusing wrong response.
+if nc -z -w1 localhost "$PORT" 2>/dev/null; then
+  log "[ERR] Port $PORT is already in use - cannot start the callback listener."
+  log "[ERR] Find and stop whatever is using it, e.g.:"
+  log "[ERR]   lsof -nP -iTCP:$PORT -sTCP:LISTEN"
+  exit 1
+fi
+
 AUTH_URL="${AUTHORIZE_URL}?response_type=code"
 AUTH_URL+="&client_id=$(urlencode "$CLIENT_ID")"
 AUTH_URL+="&redirect_uri=$(urlencode "$REDIRECT_URI")"
