@@ -12,6 +12,18 @@ key, then wiring that JWT into Claude Code so it can call a real LLM
 > tested on macOS. Running them on Linux (tested on RHEL/CentOS with
 > `ncat`) currently fails - no Linux support yet.
 
+> **IP from some countries gets blocked by Portkey.** Confirmed on
+> multiple machines (Linux and macOS) whose public IP resolves to
+> Vietnam (VNPT, FPT) - every call through Portkey to Bedrock/Anthropic
+> fails with `bedrock error: Access to Anthropic models is not allowed
+> from unsupported countries...`, even though Vietnam IS listed as
+> supported on [anthropic.com/supported-countries](https://www.anthropic.com/supported-countries).
+> Calling Bedrock directly (bypassing Portkey, same credentials, same
+> IP) succeeds with HTTP 200 - so the block happens inside Portkey's
+> gateway, not at AWS/Anthropic. Same JWT from a Singapore-based IP
+> works fine. If your calls fail with this exact error, it's likely
+> your egress IP's country, not a bug in this repo's auth flow.
+
 ## Want to try it?
 
 This repo's values are wired to one specific lab environment, so cloning
