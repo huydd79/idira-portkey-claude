@@ -76,15 +76,27 @@ auto-installs missing ones via Homebrew if available), then symlinks
 
 ## Usage
 
+### Step 1 - get a token
+
 ```bash
 idira-get-jwt.sh
 ```
 
 On first run (or once the token expires after 5h), a browser window opens
 for SSO/MFA login. The JWT is cached at `~/.cache/idira_auth/tokens.json`
-and printed to stdout, ready to use as a Bearer token or as Claude Code's
-`apiKeyHelper`.
+and printed to stdout. Check that it printed a token with no errors before
+moving on.
 
-Opening Claude Code inside this directory (`idira-portkey-claude/`) picks
-up `.claude/settings.local.json` automatically and routes every request
-through Portkey using this JWT.
+### Step 2 - verify the Portkey connection through Claude Code
+
+```bash
+rm -f ~/.cache/idira_auth/tokens.json
+claude
+```
+
+Removing the cached token first forces Claude Code's `apiKeyHelper` to run
+`idira-get-jwt.sh` itself (opening the browser again if needed) instead of
+reusing the token from Step 1. Opening Claude Code inside this directory
+(`idira-portkey-claude/`) picks up `.claude/settings.local.json`
+automatically and routes every request through Portkey using the JWT. If
+Claude responds normally, the Portkey connection is working end to end.
