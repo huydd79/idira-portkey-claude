@@ -4,7 +4,9 @@
 # Setup script for idira-get-jwt.sh:
 #   1. Check required tools (curl, jq, nc, openssl); offer to install
 #      missing ones via Homebrew (macOS only).
-#   2. Symlink idira-get-jwt.sh into ~/.local/bin so it can be run
+#   2. Check Claude Code is installed; if not, run Anthropic's
+#      official native installer (https://claude.ai/install.sh).
+#   3. Symlink idira-get-jwt.sh into ~/.local/bin so it can be run
 #      from anywhere as a command.
 #
 # Usage: ./install.sh
@@ -40,7 +42,23 @@ if [ "${#MISSING[@]}" -gt 0 ]; then
 fi
 
 echo ""
-echo "== Step 2: creating symlink in $BIN_DIR =="
+echo "== Step 2: checking Claude Code =="
+
+if command -v claude >/dev/null 2>&1; then
+  echo "  [OK] claude ($(command -v claude)) - $(claude --version 2>&1)"
+else
+  echo "  [MISSING] claude - installing via official native installer..."
+  curl -fsSL https://claude.ai/install.sh | bash
+  hash -r 2>/dev/null || true
+  if command -v claude >/dev/null 2>&1; then
+    echo "  [OK] claude installed ($(command -v claude))"
+  else
+    echo "  [WARN] claude still not found on PATH after install - open a new terminal and re-run this script." >&2
+  fi
+fi
+
+echo ""
+echo "== Step 3: creating symlink in $BIN_DIR =="
 
 chmod +x "$TARGET_SCRIPT"
 mkdir -p "$BIN_DIR"
