@@ -1,8 +1,8 @@
 # idira-portkey-claude
 
-A lab testing integration between **CyberArk Identity (idira)**, the
+A lab testing integration between **Idira**, the
 **Portkey AI Gateway**, and **Claude Code** — using a JWT issued by
-CyberArk Identity (via OAuth2 Authorization Code + PKCE, no client_secret
+Idira (via OAuth2 Authorization Code + PKCE, no client_secret
 required) to authenticate directly against Portkey instead of a static API
 key, then wiring that JWT into Claude Code so it can call a real LLM
 (Bedrock, routed through Portkey).
@@ -36,7 +36,7 @@ test.
 ```
                  1. open browser
                     SSO / MFA login
-  Claude Code  ───────────────────────────▶  CyberArk Identity
+  Claude Code  ───────────────────────────▶  Idira
  (apiKeyHelper)   (Authorization Code        (OIDC app, PKCE,
        │           + PKCE, no secret)         public client)
        │                                             │
@@ -76,7 +76,7 @@ test.
 The values in `idira-get-jwt.sh` (`CLIENT_ID`, `AUTHORIZE_URL`,
 `TOKEN_URL`) and in `.claude/settings.local.json` (the Portkey config slug)
 are hardcoded for **one specific existing lab environment** — a single
-CyberArk Identity tenant and a single Portkey workspace. Cloning this repo
+Idira tenant and a single Portkey workspace. Cloning this repo
 and running it as-is will **not work** without an account on that lab.
 
 ## Install

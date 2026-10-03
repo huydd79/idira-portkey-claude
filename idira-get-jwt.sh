@@ -1,7 +1,7 @@
 #!/bin/bash
 # idira-get-jwt.sh (generated from idira-get-jwt.sh-original by install.sh)
 # ------------------------------------------------------------------
-# Helper to obtain a JWT from CyberArk Identity using Authorization
+# Helper to obtain a JWT from Idira using Authorization
 # Code + PKCE (RFC 7636) - PUBLIC CLIENT, no client_secret involved.
 # Pure bash (curl + nc + openssl + jq), no python required.
 #
@@ -13,7 +13,7 @@
 # .well-known/openid-configuration - no device_authorization_endpoint
 # field). That is why PKCE is used instead of Device Flow.
 #
-# NOTE: CyberArk Identity requires a client_secret for the
+# NOTE: Idira requires a client_secret for the
 # grant_type=refresh_token call (verified empirically - PKCE alone is
 # only accepted for the initial authorization_code exchange, not for
 # refresh). To keep this script 100% secret-free, it does NOT attempt
@@ -183,7 +183,7 @@ EXPIRES_IN=$(echo "$TOKEN_RES" | jq -r '.expires_in // 3600')
 EXPIRES_AT=$(( $(get_now) + EXPIRES_IN ))
 
 # refresh_token is intentionally NOT stored: this script never uses it
-# (CyberArk Identity requires a client_secret for grant_type=refresh_token
+# (Idira requires a client_secret for grant_type=refresh_token
 # - see note above). Keeping it on disk would just be a dead 24h-lived
 # credential, so it is discarded.
 jq -n --arg at "$ACCESS_TOKEN" --argjson exp "$EXPIRES_AT" \
