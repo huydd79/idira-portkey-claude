@@ -1,33 +1,63 @@
 # idira-portkey-claude
 
-Lab test tích hợp giữa **CyberArk Identity (idira)**, **Portkey AI Gateway**, và
-**Claude Code** — dùng JWT lấy từ CyberArk Identity (qua OAuth2 Authorization
-Code + PKCE, không cần client_secret) để authen trực tiếp với Portkey thay
-cho API key tĩnh, sau đó wire JWT đó vào Claude Code để gọi LLM thực tế
-(Bedrock, qua Portkey routing).
+A lab testing integration between **CyberArk Identity (idira)**, the
+**Portkey AI Gateway**, and **Claude Code** — using a JWT issued by
+CyberArk Identity (via OAuth2 Authorization Code + PKCE, no client_secret
+required) to authenticate directly against Portkey instead of a static API
+key, then wiring that JWT into Claude Code so it can call a real LLM
+(Bedrock, routed through Portkey).
 
-## Luồng hoạt động
+## How it works
 
-1. `idira-get-jwt.sh` mở browser, xác thực SSO/MFA qua CyberArk Identity
-   (Authorization Code + PKCE, public client), đổi code lấy JWT.
-2. JWT được dùng làm `Authorization: Bearer` khi gọi Portkey AI Gateway —
-   Portkey verify signature qua JWKS và đọc custom claims
-   (`portkey_oid`, `portkey_workspace`, `scope`) để xác định org/workspace.
-3. Claude Code gọi `idira-get-jwt.sh` làm `apiKeyHelper` (xem
-   `.claude/settings.local.json`) để tự động lấy/cache JWT, route request
-   qua Portkey tới model Bedrock.
+```
+                 1. open browser
+                    SSO / MFA login
+  Claude Code  ───────────────────────────▶  CyberArk Identity
+ (apiKeyHelper)   (Authorization Code        (OIDC app, PKCE,
+       │           + PKCE, no secret)         public client)
+       │                                             │
+       │ runs                                        │ 2. redirect back
+       ▼                                              │    with auth code
+ idira-get-jwt.sh                                     ▼
+  - PKCE code_verifier/challenge        3. exchange code -> JWT
+  - local callback listener                (code_verifier, no secret)
+  - caches JWT at                               │
+    ~/.cache/idira_auth/tokens.json             │
+       │                                        │
+       └───────────────◀── JWT (access_token) ──┘
 
-## Giới hạn - đọc trước khi dùng
+       │
+       │ 4. Authorization: Bearer <JWT>
+       ▼
+ ┌───────────────────────────────────────────────┐
+ │               Portkey AI Gateway                │
+ │  - verifies JWT signature via JWKS              │
+ │  - reads custom claims: portkey_oid,             │
+ │    portkey_workspace, scope                      │
+ │  - routes request via a saved Config             │
+ │    (x-portkey-config header)                     │
+ └───────────────────────┬───────────────────────┘
+                          │ 5. routed call
+                          ▼
+                 AWS Bedrock (Claude model)
+                          │
+                          ▼
+                  response flows back to
+                  Claude Code as a normal
+                  /v1/messages reply
+```
 
-Các tham số trong `idira-get-jwt.sh` (`CLIENT_ID`, `AUTHORIZE_URL`,
-`TOKEN_URL`) và trong `.claude/settings.local.json` (Portkey config slug)
-được build riêng theo **môi trường lab hiện có** — 1 tenant CyberArk Identity
-và 1 workspace Portkey cụ thể. Clone repo về chạy thẳng sẽ **không hoạt
-động** nếu không có account trong lab này.
+## Before you run this - read this first
 
-Muốn test nhanh, liên hệ huydd@huydo.net để được đăng ký account test.
+The values in `idira-get-jwt.sh` (`CLIENT_ID`, `AUTHORIZE_URL`,
+`TOKEN_URL`) and in `.claude/settings.local.json` (the Portkey config slug)
+are hardcoded for **one specific existing lab environment** — a single
+CyberArk Identity tenant and a single Portkey workspace. Cloning this repo
+and running it as-is will **not work** without an account on that lab.
 
-## Cài đặt
+Want to try it quickly? Contact huydd@huydo.net to request a test account.
+
+## Install
 
 ```bash
 git clone git@github.com:huydd79/idira-portkey-claude.git
@@ -35,19 +65,21 @@ cd idira-portkey-claude
 ./install.sh
 ```
 
-`install.sh` kiểm tra các tool cần (`curl`, `jq`, `nc`, `openssl`; tự
-`brew install` nếu thiếu và máy có Homebrew), sau đó symlink
-`idira-get-jwt.sh` vào `~/.local/bin` để gọi được từ bất kỳ đâu.
+`install.sh` checks for the required tools (`curl`, `jq`, `nc`, `openssl`;
+auto-installs missing ones via Homebrew if available), then symlinks
+`idira-get-jwt.sh` into `~/.local/bin` so it can be run from anywhere.
 
-## Cách dùng
+## Usage
 
 ```bash
 idira-get-jwt.sh
 ```
 
-Lần đầu (hoặc khi token hết hạn sau 5h) sẽ tự mở browser để đăng nhập
-SSO/MFA. JWT được cache tại `~/.cache/idira_auth/tokens.json`, in ra stdout
-để dùng làm Bearer token hoặc làm `apiKeyHelper` cho Claude Code.
+On first run (or once the token expires after 5h), a browser window opens
+for SSO/MFA login. The JWT is cached at `~/.cache/idira_auth/tokens.json`
+and printed to stdout, ready to use as a Bearer token or as Claude Code's
+`apiKeyHelper`.
 
-Mở Claude Code trong thư mục này (`idira-portkey-claude/`) sẽ tự dùng cấu
-hình trong `.claude/settings.local.json` để gọi Claude qua Portkey bằng JWT.
+Opening Claude Code inside this directory (`idira-portkey-claude/`) picks
+up `.claude/settings.local.json` automatically and routes every request
+through Portkey using this JWT.
