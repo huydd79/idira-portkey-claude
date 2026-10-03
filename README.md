@@ -10,8 +10,8 @@ key, then wiring that JWT into Claude Code so it can call a real LLM
 ## Want to try it?
 
 This repo's values are wired to one specific lab environment, so cloning
-it won't work out of the box. Contact **hdo@paloaltonetworks.com** to
-request a test account.
+it won't work out of the box. [📧 Contact me](mailto:hdo@paloaltonetworks.com)
+to request a test account.
 
 ## How it works
 
