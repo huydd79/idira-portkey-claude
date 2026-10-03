@@ -7,6 +7,12 @@ required) to authenticate directly against Portkey instead of a static API
 key, then wiring that JWT into Claude Code so it can call a real LLM
 (Bedrock, routed through Portkey).
 
+## Want to try it?
+
+This repo's values are wired to one specific lab environment, so cloning
+it won't work out of the box. Contact **hdo@paloaltonetworks.com** to
+request a test account.
+
 ## How it works
 
 ```
@@ -54,8 +60,6 @@ The values in `idira-get-jwt.sh` (`CLIENT_ID`, `AUTHORIZE_URL`,
 are hardcoded for **one specific existing lab environment** — a single
 CyberArk Identity tenant and a single Portkey workspace. Cloning this repo
 and running it as-is will **not work** without an account on that lab.
-
-Want to try it quickly? Contact huydd@huydo.net to request a test account.
 
 ## Install
 
